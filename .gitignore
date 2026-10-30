@@ -2,3 +2,8 @@ public/
 __pycache__/
 *.csv
 .DS_Store
+
+# Homelab publisher (deploy/): raw CSV archive, SSH state and the deploy key never go to git
+deploy/archive/
+deploy/state/
+deploy/deploy_key*

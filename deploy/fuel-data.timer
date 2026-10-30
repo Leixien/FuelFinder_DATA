@@ -1,0 +1,13 @@
+[Unit]
+Description=Publish FuelFinder stations.json every morning
+
+[Timer]
+# MIMIT publishes around 08:00 Italian time, sometimes later: a second pass at noon.
+# publish.sh skips the second run when the morning one already published the same day.
+OnCalendar=*-*-* 08:45 Europe/Rome
+OnCalendar=*-*-* 12:00 Europe/Rome
+# Catch up after the homelab was off at the scheduled time.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

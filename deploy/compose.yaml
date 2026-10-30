@@ -1,0 +1,14 @@
+services:
+  publish:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      DRY_RUN: ${DRY_RUN:-0}
+    volumes:
+      # Raw CSVs, one folder per reference date.
+      - ./archive:/archive
+      # GitHub's SSH host key, remembered after the first push.
+      - ./state:/state
+      # Deploy key with write access to this repository only (see README).
+      - ./deploy_key:/run/secrets/deploy_key:ro
