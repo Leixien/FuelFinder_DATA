@@ -1,12 +1,14 @@
 name: Publish stations.json
 
+# MIMIT times out from GitHub runners since mid-October 2026, so the homelab (deploy/) downloads the CSVs
+# and pushes stations.json to the `data` branch. This workflow runs on main, where the github-pages
+# environment allows deployments, and only republishes that branch.
 on:
   schedule:
-    # MIMIT publishes the previous day's extraction in the morning (Italian time).
-    - cron: "0 8 * * *"
+    # After the homelab runs (08:45 and 12:00 Italian time); UTC, so one hour later in summer.
+    - cron: "15 9 * * *"
+    - cron: "30 12 * * *"
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -20,17 +22,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
-      - name: Test
-        run: python -m unittest -v
-      # Fails (and keeps the last published file) if MIMIT is unreachable or the data looks broken.
-      - name: Build
-        run: python build_stations.py public/stations.json
+          ref: data
+          path: public
+      - name: Keep only the published file
+        run: rm -rf public/.git
       - uses: actions/upload-pages-artifact@v4
         with:
           path: public
@@ -44,3 +43,26 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # A failed run emails the repository owner: the signal that the homelab stopped publishing.
+  freshness:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: data
+      - name: Prices must be recent
+        shell: python
+        run: |
+          import json
+          from datetime import date, datetime, timedelta
+          from zoneinfo import ZoneInfo
+
+          reference = date.fromisoformat(json.load(open("stations.json"))["prices_reference_date"])
+          # Same rule as the apps' "old data" banner: 48 h after the end of the reference day.
+          deadline = datetime.combine(reference, datetime.min.time(), ZoneInfo("Europe/Rome")) + timedelta(hours=72)
+          now = datetime.now(ZoneInfo("Europe/Rome"))
+          print(f"published reference date {reference}, stale after {deadline:%Y-%m-%d %H:%M}")
+          if now > deadline:
+              raise SystemExit("::error::stations.json is stale: is the homelab publisher running?")

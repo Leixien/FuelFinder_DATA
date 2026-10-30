@@ -1,0 +1,10 @@
+[Unit]
+Description=Publish FuelFinder stations.json from the MIMIT CSVs
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+# Adjust to where the repository is cloned on the homelab.
+WorkingDirectory=/opt/FuelFinder_DATA/deploy
+ExecStart=/usr/bin/docker compose run --rm publish
