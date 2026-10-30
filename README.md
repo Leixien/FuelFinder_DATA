@@ -41,6 +41,8 @@ journalctl -u fuel-data.service                  # log
 
 Dopo un `git pull` serve `docker compose build` per aggiornare l'immagine.
 
+Codici d'uscita di `publish.sh`: `0` pubblicato, `75` niente di nuovo (il MIMIT non ha ancora aggiornato o la data è già online; per systemd è un successo grazie a `SuccessExitStatus=75`), qualsiasi altro codice è un errore. Homelab Notify li usa per distinguere "pubblicato", "niente di nuovo" e "fallito". Dopo l'aggiornamento serve `sudo cp fuel-data.service /etc/systemd/system/ && sudo systemctl daemon-reload`.
+
 ## Fonte dati
 
 Fonte dati: **MIMIT – Osservaprezzi Carburanti** ([dataset](https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti)), licenza [IODL 2.0](https://www.dati.gov.it/iodl/2.0/). Il file pubblicato riporta l'attribuzione nel campo `source`.
