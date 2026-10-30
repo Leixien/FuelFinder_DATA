@@ -1,7 +1,14 @@
 #!/bin/sh
 # Downloads the MIMIT CSVs from the home network, builds stations.json and pushes it to the `data` branch.
 # GitHub Actions on main then deploys that branch to Pages (MIMIT times out from GitHub runners since mid-October 2026).
+#
+# Exit codes, read by systemd and by Homelab Notify's job monitor:
+#   0   published a newer reference date
+#   75  nothing new to publish (MIMIT not updated yet, or already published today): a success, not an error
+#   any other  failure (download, broken data, push)
 set -eu
+
+NOTHING_NEW=75
 
 MIMIT_URL=https://www.mimit.gov.it/images/exportCSV/
 PAGES_URL=${PAGES_URL:-https://leixien.github.io/FuelFinder_DATA/stations.json}
@@ -33,7 +40,7 @@ cp "$WORK"/*.csv "$ARCHIVE/$new/"
 # ISO dates compare correctly as strings.
 if [ -n "$published" ] && [ ! "$new" \> "$published" ]; then
     echo "reference date $new is not newer than published $published: nothing to publish"
-    exit 0
+    exit "$NOTHING_NEW"
 fi
 
 if [ "${DRY_RUN:-0}" = 1 ]; then

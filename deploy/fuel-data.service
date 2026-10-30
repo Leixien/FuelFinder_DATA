@@ -8,3 +8,5 @@ Type=oneshot
 # Adjust to where the repository is cloned on the homelab.
 WorkingDirectory=/opt/FuelFinder_DATA/deploy
 ExecStart=/usr/bin/docker compose run --rm publish
+# 75 = nothing new to publish (see publish.sh): not a failure, but distinct from 0 for job monitors.
+SuccessExitStatus=75
